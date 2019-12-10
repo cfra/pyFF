@@ -40,10 +40,6 @@ def run_pyff(*args):
     return run_cmdline('pyff', args)
 
 
-def run_pyffd(*args):
-    return run_cmdline('pyffd', args)
-
-
 def run_cmdline(script, *args):
     argv = list(*args)
     starter = tempfile.NamedTemporaryFile('w').name

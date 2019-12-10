@@ -23,17 +23,14 @@ from six.moves.urllib_parse import urlparse, quote_plus
 from itertools import chain
 import yaml
 import xmlsec
-import cherrypy
 import iso8601
 import os
 import pkg_resources
 import re
-from jinja2 import Environment, PackageLoader
 from lxml import etree
 from .constants import config, NS
 from .logs import get_log
 from .exceptions import *
-from .i18n import language
 import requests
 from requests_file import FileAdapter
 from requests_cache import CachedSession
@@ -281,14 +278,6 @@ def validate_document(t):
     schema().assertValid(t)
 
 
-def request_vhost(request):
-    return request.headers.get('X-Forwarded-Host', request.headers.get('Host', request.base))
-
-
-def request_scheme(request):
-    return request.headers.get('X-Forwarded-Proto', request.scheme)
-
-
 def ensure_dir(fn):
     d = os.path.dirname(fn)
     if not os.path.exists(d):
@@ -343,11 +332,6 @@ def safe_write(fn, data, mkdirs=False):
     return False
 
 
-site_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "site")
-env = Environment(loader=PackageLoader(__package__, 'templates'), extensions=['jinja2.ext.i18n'])
-getattr(env, 'install_gettext_callables')(language.gettext, language.ngettext, newstyle=True)
-
-
 def urlencode_filter(s):
     if type(s) == 'Markup':
         s = s.unescape()
@@ -368,27 +352,6 @@ def to_yaml_filter(pipeline):
     out = six.StringIO()
     yaml.dump(pipeline, stream=out)
     return out.getvalue()
-
-
-env.filters['u'] = urlencode_filter
-env.filters['truncate'] = truncate_filter
-env.filters['to_yaml'] = to_yaml_filter
-env.filters['sha1'] = lambda x: hash_id(x, 'sha1', False)
-
-
-def template(name):
-    return env.get_template(name)
-
-
-def render_template(name, **kwargs):
-    kwargs.setdefault('http', cherrypy.request)
-    vhost = request_vhost(cherrypy.request)
-    kwargs.setdefault('vhost', vhost)
-    kwargs.setdefault('scheme', request_scheme(cherrypy.request))
-    kwargs.setdefault('brand', "pyFF @ %s" % vhost)
-    kwargs.setdefault('google_api_key', config.google_api_key)
-    kwargs.setdefault('_', _)
-    return template(name).render(**kwargs)
 
 
 def parse_date(s):

@@ -149,7 +149,7 @@ def end(req, *opts):
         - end
         - unreachable
 
-    **Warning** This is very bad if used with pyffd - the server will stop running. If you just want to
+    **Warning** This is very bad if used with pyff wsgi - the server will stop running. If you just want to
     break out of the pipeline, use break instead.
 
     """

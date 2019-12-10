@@ -22,6 +22,12 @@ from pyff import builtins
 __author__ = 'leifj'
 
 
+def captured(stream):
+    if hasattr(stream, 'captured'):
+        return getattr(stream, 'captured')
+    return ""
+
+
 class PipeLineTest(SignerTestCase):
     def run_pipeline(self, pl_name, ctx=None, md=None):
         if ctx is None:
@@ -81,12 +87,13 @@ class ParseTest(PipeLineTest):
 - select
 - stats
 """ % self.datadir)
-                print(sys.stdout.captured)
-                print(sys.stderr.captured)
+                print(captured(sys.stdout))
+                print(captured(sys.stderr))
                 eIDs = [e.get('entityID') for e in md.store]
                 assert ('https://idp.example.com/saml2/idp/metadata.php1' not in eIDs)
                 assert ('https://idp.example.com/saml2/idp/metadata.php' in eIDs)
-                assert ("removing 'https://idp.example.com/saml2/idp/metadata.php1': schema validation failed" in str(l))
+                assert ("removing 'https://idp.example.com/saml2/idp/metadata.php1': schema validation failed" in str(
+                    l))
 
 
 # To run all LoadErrorTests: ./setup.py test -s pyff.test.test_pipeline.LoadErrorTest
@@ -107,14 +114,14 @@ class LoadErrorTest(PipeLineTest):
     - stats
     """ % (self.datadir))
                 except ResourceException as ex:
-                    print("----\n",ex,"\n++++")
+                    print("----\n", ex, "\n++++")
                     assert ("file_that_does_not_exist.xml" in str(ex))
                     return True
                 finally:
                     if os.path.isfile(self.output):
                         os.unlink(self.output)
-                    print(sys.stdout.captured)
-                    print(sys.stderr.captured)
+                    print(captured(sys.stdout))
+                    print(captured(sys.stderr))
 
         assert "Expected PipeException or ResourceException" == False
 
@@ -139,8 +146,8 @@ class LoadErrorTest(PipeLineTest):
                 finally:
                     if os.path.isfile(self.output):
                         os.unlink(self.output)
-                    print(sys.stdout.captured)
-                    print(sys.stderr.captured)
+                    print(captured(sys.stdout))
+                    print(captured(sys.stderr))
 
         assert "Expected ResourceException" == False
 
@@ -166,8 +173,8 @@ class LoadErrorTest(PipeLineTest):
                 finally:
                     if os.path.isfile(self.output):
                         os.unlink(self.output)
-                    print(sys.stdout.captured)
-                    print(sys.stderr.captured)
+                    print(captured(sys.stdout))
+                    print(captured(sys.stderr))
 
         assert "Expected Exception" == False
 
@@ -192,8 +199,8 @@ class LoadErrorTest(PipeLineTest):
                 finally:
                     if os.path.isfile(self.output):
                         os.unlink(self.output)
-                    print(sys.stdout.captured)
-                    print(sys.stderr.captured)
+                    print(captured(sys.stdout))
+                    print(captured(sys.stderr))
 
         assert "Expected MetadataException or ParserException" == False
 
@@ -217,8 +224,8 @@ class LoadErrorTest(PipeLineTest):
                 finally:
                     if os.path.isfile(self.output):
                         os.unlink(self.output)
-                    print(sys.stdout.captured)
-                    print(sys.stderr.captured)
+                    print(captured(sys.stdout))
+                    print(captured(sys.stderr))
 
         assert "Expected MetadataException or ParserException" == False
 
@@ -236,8 +243,8 @@ class LoadErrorTest(PipeLineTest):
     - select
     - stats
     """ % (self.datadir, self.datadir))
-                print(sys.stdout.captured)
-                print(sys.stderr.captured)
+                print(captured(sys.stdout))
+                print(captured(sys.stderr))
                 if os.path.isfile(self.output):
                     os.unlink(self.output)
 
@@ -264,8 +271,8 @@ class LoadErrorTest(PipeLineTest):
                 finally:
                     if os.path.isfile(self.output):
                         os.unlink(self.output)
-                    print(sys.stdout.captured)
-                    print(sys.stderr.captured)
+                    print(captured(sys.stdout))
+                    print(captured(sys.stderr))
 
     # Test default behaviour. Loading a file with an invalid entity must not raise an exception
     def test_no_fail_on_error_invalid_entity(self):
@@ -281,8 +288,8 @@ class LoadErrorTest(PipeLineTest):
     - select
     - stats
     """ % (self.datadir, self.datadir))
-                print(sys.stdout.captured)
-                print(sys.stderr.captured)
+                print(captured(sys.stdout))
+                print(captured(sys.stderr))
                 if os.path.isfile(self.output):
                     os.unlink(self.output)
 
@@ -301,8 +308,8 @@ class LoadErrorTest(PipeLineTest):
     """ % (self.datadir))
                 if os.path.isfile(self.output):
                     os.unlink(self.output)
-                print(sys.stdout.captured)
-                print(sys.stderr.captured)
+                print(captured(sys.stdout))
+                print(captured(sys.stderr))
 
 
 class SortTest(PipeLineTest):
@@ -325,7 +332,7 @@ class SortTest(PipeLineTest):
                             assert (keygen_fail_str in str(l))
                         except AssertionError:
                             print("Test failed on expecting missing sort value from: '%s'.\nCould not find string "
-                                  "on the output: '%s'.\nOutput was:\n %s" % (e[0], keygen_fail_str,six.u(l)))
+                                  "on the output: '%s'.\nOutput was:\n %s" % (e[0], keygen_fail_str, six.u(l)))
                             raise
                 except (IndexError, TypeError):
                     print("Test failed  for: '%s' due to 'order_by' xpath supplied without proper expectation tuple." %
@@ -364,11 +371,11 @@ class SortTest(PipeLineTest):
     - dump
     - stats
     """ % (self.datadir, self.datadir, self.datadir))
-            print(sys.stdout.captured)
-            print(sys.stderr.captured)
+            print(captured(sys.stdout))
+            print(captured(sys.stderr))
 
             # tuple format (entityID, has value for 'order_by' xpath)
-            expected_order = [(self.EID1, ), (self.EID2, ), (self.EID3, )]
+            expected_order = [(self.EID1,), (self.EID2,), (self.EID3,)]
             self._run_sort_test(expected_order, sxp, res, l)
 
     # Test sort entries first by registrationAuthority
@@ -389,7 +396,7 @@ class SortTest(PipeLineTest):
     - sort order_by %s
     - stats
     """ % (self.datadir, self.datadir, self.datadir, sxp))
-            #print(l)
+            # print(l)
 
             # tuple format (entityID, has value for 'order_by' xpath)
             expected_order = [(self.EID3, True), (self.EID1, False), (self.EID2, False)]
@@ -413,8 +420,8 @@ class SortTest(PipeLineTest):
     - sort order_by %s
     - stats
     """ % (self.datadir, self.datadir, self.datadir, sxp))
-            print(sys.stdout.captured)
-            print(sys.stderr.captured)
+            print(captured(sys.stdout))
+            print(captured(sys.stderr))
 
             # tuple format (entityID, has value for 'order_by' xpath)
             expected_order = [(self.EID1, True), (self.EID3, True), (self.EID2, False)]
@@ -485,7 +492,7 @@ class SigningTest(PipeLineTest):
                 pass
             except ExitException as ex:
                 assert ex.code == 22
-                assert "slartibartifast" in "".join(sys.stdout.captured)
+                assert "slartibartifast" in "".join(captured(sys.stdout))
 
     def test_single_dump(self):
         with patch.multiple("sys", exit=self.sys_exit, stdout=StreamCapturing(sys.stdout)):
@@ -494,7 +501,7 @@ class SigningTest(PipeLineTest):
 - dump
 """)
                 assert '<EntitiesDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata"/>' \
-                       in "".join(sys.stdout.captured)
+                       in "".join(captured(sys.stdout))
             except IOError:
                 pass
 
@@ -659,7 +666,7 @@ class SigningTest(PipeLineTest):
 """ % (self.datadir, tmpfile))
                 assert False
             except PipeException as ex:
-                print("".join(sys.stdout.captured))
+                print("".join(captured(sys.stdout)))
                 print(str(ex))
                 pass
             except IOError:
@@ -701,4 +708,4 @@ class SigningTest(PipeLineTest):
 """ % self.datadir)
             except ValueError:
                 pass
-            assert("Expected exception from bad namespace in")
+            assert ("Expected exception from bad namespace in")
