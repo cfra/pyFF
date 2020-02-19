@@ -69,9 +69,10 @@ class MediaAccept(object):
 def _fmt(data, accepter):
     if data is None or len(data) == 0:
         return "", 'text/plain'
-    if isinstance(data, (etree._Element, etree._ElementTree)) and (
-            accepter.get('text/xml') or accepter.get('application/xml') or accepter.get(
-        'application/samlmetadata+xml')):
+    if isinstance(data, (etree._Element, etree._ElementTree)) and \
+            (accepter.get('text/xml') or
+             accepter.get('application/xml') or
+             accepter.get('application/samlmetadata+xml')):
         return dumptree(data), 'application/samlmetadata+xml'
     if isinstance(data, (dict, list)) and accepter.get('application/json'):
         return dumps(data, default=json_serializer), 'application/json'

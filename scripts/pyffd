@@ -1,0 +1,132 @@
+#!/bin/bash
+
+usage() {
+   echo
+   echo "Usage:"
+   echo
+   echo "`basename $0` [options] pipeline"
+   echo
+   echo "This is a script that attempts to invoke pyFF 2.0 in the style of pyffd 1.x"
+   echo "You should consider updating to run the pyff wsgi application directly."
+   echo
+   exit 1
+}
+
+tempfiles=""
+
+function tempfile()
+{
+  tf=$(mktemp)
+  tempfiles="$tempfiles $tf"
+  echo $tf
+}
+
+function cleanup()
+{
+  test -z "${tempfiles}" && rm -f "${tempfiles}"
+}
+
+trap cleanup EXIT
+
+LONG_OPTS="no-caching,log:,error-log:,access-log:,loglevel:,port:,host:,frequency:,alias:,dir:,proxy:,modules:"
+SHORT_OPTS="Cp:fal:P:H:A:m:"
+
+tmp=$(getopt -o "${SHORT_OPTS}" --long "${LONG_OPTS}" -- "$@")
+eval set -- "${tmp}"
+
+no_caching=false
+pidfile="/var/run/pyffd.pid"
+foreground=false
+autorestart=false
+logfile=
+loglevel=INFO
+access_log=
+error_stream=sys.stderr
+error_log=
+port=8080
+host=127.0.0.1
+frequency=3600
+aliases=""
+dir=$CWD
+modules=""
+proxy=false
+while [ $# -gt 0 ]; do
+   case $1 in
+      -C | --no-caching) no_caching=true ;;
+      -p) pidfile=$2; shift ;;
+      -f) foreground=true ;;
+      -a) autorestart=true ;;
+      -l | --log) logfile=$2; shift ;;
+      --error-log) error_log=$2; error_stream=$2; shift ;;
+      --access-log) access_log=$2; shift ;;
+      --loglevel) loglevel=$2; shift ;;
+      -P | --port) port=$2; shift;;
+      -H | --host) host=$2; shift;;
+      --frequency) frequency=$2; shift;;
+      -A | --alias) alias="$alias;$2"; shift;;
+      --dir) dir=$2; shift ;;
+      --proxy) proxy=true ;;
+      -m | --modules) modules="$modules $2"; shift;;
+      -h | --help) usage; exit 0; ;;
+      --) shift; break; ;;
+   esac
+   shift
+done
+
+pipeline=$1; shift
+gunicorn_args="${PYFF_GUNICORN_ARGS}"
+bind="${host}:${port}"
+
+if [ -z "${pipeline}" ]; then
+  usage
+  exit 1
+fi
+
+if [ -z "${PYFF_LOGGER}" ]; then
+  logger_config=$(tempfile)
+  PYFF_LOGGER=${logger_config}
+  cat>"${logger_config}"<<EOF
+[loggers]
+keys = root
+
+[handlers]
+keys = default
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = ${loglevel}
+handlers = default
+
+[handler_default]
+class = StreamHandler
+args = (${error_stream},)
+level = ${loglevel}
+formatter = generic
+
+[formatter_generic]
+format = %(asctime)s %(levelname)-5.5s [%(name)s:%(lineno)s][%(threadName)s] %(message)s
+EOF
+fi
+
+gunicorn_args="$gunicorn_args --log-config ${PYFF_LOGGER}"
+
+test -n "${PYFF_LOGGER}" && gunicorn_args="$gunicorn_args --log-config ${PYFF_LOGGER}"
+test $autorestart = true && gunicorn_args="$gunicorn_args --reload --reload-extra-file ${pipeline}"
+test $foreground = false && gunicorn_args="$gunicorn_args --daemon"
+test -n "${error_log}" && gunicorn_args="$gunicorn_args --error-logfile ${error_log}"
+test -n "${access_log}" && gunicorn_args="$gunicorn_args --access-logfile ${access_log}"
+test -n "${dir}" && cd "${dir}"
+
+exec gunicorn ${gunicorn_args} \
+  --bind "${bind}" \
+  -t "${PYFF_TIMEOUT:-600}" \
+  -p "${pidfile}" \
+  --log-level "${loglevel}" \
+  -e PYFF_PIPELINE="${pipeline}" \
+  -e PYFF_STORE_CLASS=pyff.store:MemoryStore \
+  -e PYFF_UPDATE_FREQUENCY="${frequency}" \
+  --threads "${PYFF_THREADS:-10}" \
+  --worker-tmp-dir=/dev/shm \
+  pyff.wsgi:app

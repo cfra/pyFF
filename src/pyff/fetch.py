@@ -1,4 +1,3 @@
-
 from .logs import get_log
 import queue
 import threading
@@ -44,10 +43,12 @@ class Fetch(threading.Thread):
                         r = url_get(url)
                         if self.content_handler is not None:
                             r = self.content_handler(r)
-                        self.response.put({'response': r, 'url': url, 'exception': None, 'last_fetched': datetime.now()})
+                        self.response.put(
+                            {'response': r, 'url': url, 'exception': None, 'last_fetched': datetime.now()})
                         log.info("successfully fetched {}".format(url))
                     except Exception as ex:
-                        self.response.put({'response': None, 'url': url, 'exception': ex, 'last_fetched': datetime.now()})
+                        self.response.put(
+                            {'response': None, 'url': url, 'exception': ex, 'last_fetched': datetime.now()})
                         log.warn("error fetching {}".format(url))
                         log.warn(ex)
                         import traceback
@@ -68,7 +69,7 @@ class Fetcher(threading.Thread, Watchable):
         self.response = queue.Queue()
         self.pool = threading.BoundedSemaphore(num_threads)
         self.threads = []
-        for i in range(0,num_threads):
+        for i in range(0, num_threads):
             t = Fetch(self.request, self.response, self.pool, self._id, content_handler)
             t.start()
             self.threads.append(t)

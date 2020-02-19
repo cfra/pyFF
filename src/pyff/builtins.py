@@ -16,13 +16,12 @@ import re
 import xmlsec
 from iso8601 import iso8601
 from lxml.etree import DocumentInvalid
-
-from .constants import NS, config
+from .constants import NS
 from .decorators import deprecated
 from .logs import get_log
 from .pipes import Plumbing, PipeException, PipelineCallback, pipe
 from .utils import total_seconds, dumptree, safe_write, root, with_tree, duration2timedelta, xslt_transform, \
-    validate_document, hash_id, ensure_dir
+    validate_document, hash_id
 from .samlmd import sort_entities, iter_entities, annotate_entity, set_entity_attributes, \
     discojson_t, set_pubinfo, set_reginfo, find_in_document, entitiesdescriptor, set_nodecountry, resolve_entities
 from six.moves.urllib_parse import urlparse
@@ -592,7 +591,6 @@ def load(req, *opts):
     opts['fail_on_error'] = bool(strtobool(opts['fail_on_error']))
     opts['filter_invalid'] = bool(strtobool(opts['filter_invalid']))
 
-    remotes = []
     for x in req.args:
         x = x.strip()
         log.debug("load parsing '%s'" % x)
@@ -722,11 +720,7 @@ def select(req, *opts):
     entities = resolve_entities(args, lookup_fn=req.md.store.select)
 
     if req.state.get('match', None):  # TODO - allow this to be passed in via normal arguments
-
         match = req.state['match']
-
-        if isinstance(match, six.string_types):
-            query = [match.lower()]
 
         def _strings(elt):
             lst = []

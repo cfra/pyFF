@@ -1,9 +1,6 @@
 """
 Various decorators used in pyFF.
 """
-import functools
-from collections import namedtuple
-import time
 from .logs import get_log
 
 __author__ = 'leifj'

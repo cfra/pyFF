@@ -5,57 +5,9 @@ import syslog
 import six
 import os
 
-try:
-    import cherrypy
-except ImportError as e:
-    print("cherrypy logging disabled")
-    cherrypy = None
-
-
-class PyFFLogger(object):
-    def __init__(self, name=None):
-        if name is None:
-            name = __name__
-        self._log = logging.getLogger(name)
-        self._loggers = {logging.WARN: self._log.warn,
-                         logging.WARNING: self._log.warn,
-                         logging.CRITICAL: self._log.critical,
-                         logging.INFO: self._log.info,
-                         logging.DEBUG: self._log.debug,
-                         logging.ERROR: self._log.error}
-
-    def _l(self, severity, msg):
-        if cherrypy is not None and '' in cherrypy.tree.apps:
-            cherrypy.tree.apps[''].log(str(msg), severity=severity)
-        elif severity in self._loggers:
-            self._loggers[severity](str(msg))
-        else:
-            raise ValueError("unknown severity %s" % severity)
-
-    def warn(self, msg):
-        return self._l(logging.WARN, msg)
-
-    def warning(self, msg):
-        return self._l(logging.WARN, msg)
-
-    def info(self, msg):
-        return self._l(logging.INFO, msg)
-
-    def error(self, msg):
-        return self._l(logging.ERROR, msg)
-
-    def critical(self, msg):
-        return self._l(logging.CRITICAL, msg)
-
-    def debug(self, msg):
-        return self._l(logging.DEBUG, msg)
-
-    def isEnabledFor(self, lvl):
-        return self._log.isEnabledFor(lvl)
-
 
 def get_log(name):
-    return PyFFLogger(name)
+    return logging.getLogger(name)
 
 
 log = get_log('pyff')
@@ -78,7 +30,9 @@ log_config_file(os.getenv('PYFF_LOGGING', None))
 
 
 class SysLogLibHandler(logging.Handler):
-    """A logging handler that emits messages to syslog.syslog."""
+    """
+    A logging handler that emits messages to syslog.syslog.
+    """
     priority_map = {
         10: syslog.LOG_NOTICE,
         20: syslog.LOG_NOTICE,

@@ -79,7 +79,6 @@ class XRDParser(PyffParser):
     def magic(self, content):
         return 'XRD' in content
 
-
     def parse(self, resource, content):
         info = dict()
         info['Description'] = "XRD links"
