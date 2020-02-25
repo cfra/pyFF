@@ -9,7 +9,7 @@ from os.path import abspath, dirname, join
 from setuptools import find_packages
 
 __author__ = 'Leif Johansson'
-__version__ = '1.1.2dev0'
+__version__ = '1.1.3dev0'
 
 here = abspath(dirname(__file__))
 README = open(join(here, 'README.rst')).read()
@@ -30,6 +30,7 @@ install_requires = [
     'six>=1.11.0',
     'ipaddr',
     'publicsuffix2',
+    'redis-collections==0.7.0',
     'redis',
     'requests',
     'requests_cache',
@@ -42,7 +43,6 @@ install_requires = [
     'pyramid',
     'accept_types >=0.4.1',
     'apscheduler',
-    'redis-collections',
     'cachetools',
     'xmldiff',
     'gunicorn'
