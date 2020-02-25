@@ -4,7 +4,7 @@ usage() {
    echo
    echo "Usage:"
    echo
-   echo "`basename $0` [options] pipeline"
+   echo "$(basename $0) [options] pipeline"
    echo
    echo "This is a script that attempts to invoke pyFF 2.0 in the style of pyffd 1.x"
    echo "You should consider updating to run the pyff wsgi application directly."
